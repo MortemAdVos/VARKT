@@ -1,5 +1,3 @@
-
-
 def start(ap, conn, control, pericenter, apocenter, alt, rocket, ts_fuel):
 
     target_alt = 102_000
@@ -7,7 +5,6 @@ def start(ap, conn, control, pericenter, apocenter, alt, rocket, ts_fuel):
 
     fs_sep = True
     ss_sep = True
-    ts_sep = True
 
     fst = rocket.resources_in_decouple_stage(stage=8, cumulative=False)
     sst = rocket.resources_in_decouple_stage(stage=6, cumulative=False)

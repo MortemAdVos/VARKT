@@ -1,6 +1,6 @@
-from math import pi, e, sin, cos, radians, sqrt, atan2
+from math import pi, e, sin, cos, radians, sqrt, atan2, acos
 from matplotlib import pyplot as plt
-from pygame import Vector2
+from pygame import Vector2, Vector3
 
 print()
 # если досрочно отделять ступень, скорость посадки 80, если не отделять - 162, странные дела, топливо как-то мало юзается
@@ -8,7 +8,8 @@ print()
 FUEL_MASS = 5 # масса единицы топлива или окислителя
 G = 6.67e-11
 P0 = 0.148438 # плотность воздуха при h=0
-DT = 1/1000
+DT = 1/100
+HConst = 4623 # разница между высотой от уровня моря и высотой от поверхности
 
 def show(x :list[list], vals :list[list], xdesc :str = '', ydesc :str = '', colors :list[str] = ['red'], eq :bool = False):
     f = plt.figure()
@@ -85,7 +86,7 @@ class Rocket:
     def __init__(self, H, speed, angle) -> None:
         self.T = 0
         self.stups = []
-        self.stups.append(Stup(7402, 16000*0.2, 4*117500, 4*8.024))
+        self.stups.append(Stup(7402, 16000*0.477, 4*117500, 4*8.024))
         self.stups.append(Stup(8100, 4320, 212500, 13.702))
         self.parashutes = []
         self.pos = Vector2(-H-duna.r, 0)
@@ -106,6 +107,7 @@ class Rocket:
         self.infoAt   :list[float]   = []
         self.infoAg   :list[float]   = []
         self.infoH    :list[float]   = []
+        self.infoDV   :list[float]   = []
 
     def sep(self):
         if len(self.stups) == 2:
@@ -126,7 +128,7 @@ class Rocket:
         """
         функция возвращает высоту для корабля в данный момент
         """
-        return self.pos.length() - duna.r
+        return self.pos.length() - duna.r 
     
     def getSC(self):
         return sum([p.getSC(self.getH()) for p in self.parashutes] + [self.stups[0].SC])
@@ -174,9 +176,9 @@ class Rocket:
             self.sep()
             self.openParashutes()
 
-        if self.getH() < 120 and self.speed.length() > 5:
-            if self.stups[0].burn(dt, 0.2):
-                Ft = self.stups[0].trust*0.2
+        if self.getH() < 150 and self.speed.length() > 5:
+            if self.stups[0].burn(dt, 0.5):
+                Ft = self.stups[0].trust*0.5
             
 
 
@@ -198,13 +200,17 @@ class Rocket:
         self.infoAt.append(At.length())
         self.infoAg.append(Ag.length())
         self.infoH.append(self.getH())
+        try:
+            self.infoDV.append(abs(self.infoSpd[-2].length()-self.infoSpd[-2].length())/dt)
+        except:
+            self.infoDV.append(0)
 
 
 duna = Planet(320000, 4.515e21, 0.042, 1.2, 6755)
-rocket = Rocket(56700, 830, -180)
+rocket = Rocket(90065-HConst, 825, -180-3.56)
 
 
-while rocket.getH() > 3 and rocket.T < 600:
+while rocket.getH() > 3 and rocket.T < 1200:
     rocket.update(DT)
 
 # print(rocket.T)
@@ -247,58 +253,66 @@ for i in range(0, I):
     PY.append(cos(2*pi*i/I)*duna.r)
 
 HL = rocket.infoH
-p2 = [rocket.getP(h) for h in HL]
+p2 = [rocket.getP(h+HConst) for h in HL]
 
-data = [i.split(" ") for i in open("log2.txt", 'r').read().split("\n")[:-1]]
+data = [i.split(" ") for i in open("logs.txt", 'r').read().split("\n")[:-1]]
 acL = []
 vL = []
 hL = []
 pL = []
 mL = []
-fsL = []
+asL = []
 angleL = []
-dolgL = []
-shirL = []
+lonL = []
+latL = []
+scL = []
 for i in data:
     # пока без массы, долготы и широты, потом пофикшу
-    # h, g, v, p, m, fs, an, dolg, shir = map(float, i)
-    h, g, v, p, fs, an = map(float, i)
-    hL.append(h)
+    h, g, v, p, m, fs, an, lon, lat = map(float, i)
+    # h, g, v, p, fs, an = map(float, i)
+    hL.append(h-HConst)
     acL.append(g*9.81)
     vL.append(v)
     pL.append(p)
-    # mL.append(m)
-    fsL.append(fs)
+    mL.append(m)
+    asL.append(fs/m)
     angleL.append(an)
-    # dolgL.append(dolg)
-    # shirL.append(shir)
+    lonL.append(radians(lon))
+    latL.append(radians(lat))
+    scL.append(2*fs/v/v)
 
-rT = [i for i in range(len(data))]
+kt = (1004/len(data))
 
-# xL = [-56700-duna.r]
-# yL = [0]
-# for i in range(len(data)):
- 
+rT = [i*kt for i in range(len(data))]
 
+xL = [rocket.infoPos[0].x]
+yL = [rocket.infoPos[0].y]
+aL = []
+
+lonL, latL = latL, lonL
+
+v1 = Vector3(cos(latL[0])*cos(lonL[0]), cos(latL[0])*sin(lonL[0]), sin(latL[0]))
+for i in range(len(data)):
+    v2 =  Vector3(cos(latL[i])*cos(lonL[i]), cos(latL[i])*sin(lonL[i]), sin(latL[i]))
+    ang = acos(v1.x*v2.x + v1.y*v2.y +v1.z*v2.z)
+    xL.append(-(hL[i]+duna.r)*cos(ang))
+    yL.append((hL[i]+duna.r)*sin(ang))
 
 # все фактические графики - фиолетовые
 
 print("Скорость при контакте с грунтом: ", rocket.speed.length())
 
 show([HL, hL], [p2, pL], "h","air density", colors=["red", "purple"])
-show([px, PX], [py, PY], "px", "py", ["red", "b*"], True)
+show([px, xL, PX], [py, yL, PY], "px", "py", ["red", "purple", "black"], True)
 show([lT, rT], [HL, hL], "t", "H", colors=["red", "purple"])
 show([vm, vL], [HL, hL], "V", "H", colors=["red", 'purple'])
-show([rocket.infoAt], [HL], "At", "H", colors=["red", "green", "black"])
+show([rocket.infoAs, asL], [HL, hL], "As", "H", colors=["red", "purple"])
+show([rocket.infoAs, asL], [vm, vL], "As", "V", colors=["red", "purple"])
 show([lT, rT], [vm, vL], "t", "speed", colors=["red", "purple"])
-# show([HL, hL], [rocket.infoAg, gL], "h", "g", colors=["red", "purple"])
+show([HL, hL], [rocket.infoAg, acL], "h", "g", colors=["red", "purple"])
 
 show([lT, rT], [am, acL], "t","acceleration", colors=["red", "purple"])
 show([HL, hL], [am, acL], "h","acceleration", colors=["red", "purple"])
 
-show([lT], [rocket.infoMass], "t","mass, kg", colors=["red"])
-# show([lT], [rocket.infoSC], "t","S*C", colors=["red"])
-show([lT], [am, rocket.infoAs, rocket.infoAt, rocket.infoAg], "t","As, ", colors=["black", "red", "green", "blue"])
-
-
+show([lT, rT], [rocket.infoMass, mL], "t","mass, kg", colors=["red",  "purple"])
 print()

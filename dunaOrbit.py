@@ -17,7 +17,6 @@ def dunaOrbit(ap, conn, control, rocket):
     ts_sep = True
 
     time.sleep(20)
-
     
     k = 0.75
     while pericenter() > 90000:
@@ -28,6 +27,7 @@ def dunaOrbit(ap, conn, control, rocket):
             k = 0.5
         if ts_sep and ts_fuel() < 0.1:
             control.activate_next_stage()
+            time.sleep(1)
             control.activate_next_stage()
             ts_sep = False
             print("drop stage")
