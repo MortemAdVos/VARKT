@@ -2,7 +2,17 @@
 import time
 def radialCorrect(ap, conn, control, rocket, met, tmd, dv):
     print("start radial correct maneur")
-    dT = abs(dv)/(rocket.max_vacuum_thrust/rocket.mass)
+
+    if abs(dv) < 10:
+        k = 0.1
+    elif abs(dv) < 50:
+        k = 0.5
+    elif abs(dv) < 100:
+        k = 0.75
+    else:
+        k = 1
+
+    dT = abs(dv)/(rocket.max_vacuum_thrust/rocket.mass)/k
     print("engine burn time: ", dT)
 
     ap.disengage()
@@ -21,15 +31,6 @@ def radialCorrect(ap, conn, control, rocket, met, tmd, dv):
     while met() < tmd-dT:
         if int(met())%10==0 and p != int(met()): 
             p = int(met())
-
-    if abs(dv) < 10:
-        k = 0.1
-    elif abs(dv) < 50:
-        k = 0.5
-    elif abs(dv) < 100:
-        k = 0.75
-    else:
-        k = 1
 
     control.throttle = k
     time.sleep(round(dT,1))

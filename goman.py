@@ -13,6 +13,8 @@ def goman(ap, conn, control, rocket, speed, met, tmd):
     time.sleep(1)
     control.sas_mode = conn.space_center.SASMode.prograde
 
+    time.sleep(5)
+
     while met() < tmd-dT:
         pass
 

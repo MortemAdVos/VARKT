@@ -1,5 +1,9 @@
 import time 
 
+def logging(file):
+    file.write("{}")
+
+
 def landing(ap, conn, control, rocket):
 
     print("start landing")
@@ -10,42 +14,47 @@ def landing(ap, conn, control, rocket):
     alt = conn.add_stream(getattr, rocket.flight(),'surface_altitude')
     legs = rocket.parts.with_tag("sh")
 
-    while alt() > 45000:
-        pass
-    if rocket.orbit.speed > 800:
-        control.throttle = 0.75
-    while rocket.orbit.speed > 800:
-        pass
-    control.throttle = 0
 
-    while alt() > 12000:
-        pass
-    if rocket.orbit.speed > 600:
-        control.throttle = 0.5
-    while rocket.orbit.speed > 600:
-        pass
-    
-    time.sleep(2)
+    with open("logs.txt", "a+", encoding="UTF-8") as file:
 
-    control.activate_next_stage()
-    control.activate_next_stage()
+        while alt() > 45000:
+            pass
+        if rocket.orbit.speed > 800:
+            control.throttle = 0.75
+        while rocket.orbit.speed > 800:
+            pass
+        control.throttle = 0
 
-    time.sleep(1)
+        while alt() > 12000:
+            pass
+        if rocket.orbit.speed > 600:
+            control.throttle = 0.5
+        while rocket.orbit.speed > 600:
+            pass
 
-    control.activate_next_stage()
-    for l in legs:
-        l.leg.deployed = True
-    
-    while alt() > 100:
-        pass
+        control.throttle = 0
 
-    while alt() > 10:
-        if rocket.orbit.speed > 5:
-            control.throttle = 0.2
-        else:
-            control.throttle = 0
-    control.throttle = 0
-    print("landing finished")
+        time.sleep(2)
+
+        control.activate_next_stage()
+        control.activate_next_stage()
+
+        time.sleep(1)
+
+        control.activate_next_stage()
+        for l in legs:
+            l.leg.deployed = True
+        
+        while alt() > 120:
+            pass
+
+        while alt() > 8:
+            if rocket.orbit.speed > 5:
+                control.throttle = 0.2
+            else:
+                control.throttle = 0
+        control.throttle = 0
+        print("landing finished")
 
 
 def cirlcing(ap, conn, control, alt, rocket):

@@ -60,17 +60,17 @@ munaManeur(ap, conn, control, pericenter, apocenter, alt, rocket, speed, met, M1
 dv = float(input("dV in Muna correct: "))
 if dv != 0:
     t = inputTime("time Muna correct maneur: ")
-    conn.space_center.warp_to(t-150)
+    conn.space_center.warp_to(t-75)
     radialCorrect(ap, conn, control, rocket, met, t-startTime, dv) 
 
 dv = float(input("dV on normal axis: "))
 if dv != 0:
     t = inputTime("time normal maneur: ")
-    conn.space_center.warp_to(t-150)
+    conn.space_center.warp_to(t-100)
     normalCorrect(ap, conn, control, rocket, speed, met, t-startTime, dv) 
 
 tmd = inputTime('Goman maneur time input: ')-startTime
-conn.space_center.warp_to(startTime+tmd-150)
+conn.space_center.warp_to(startTime+tmd-100)
 goman(ap, conn, control, rocket, speed, met, tmd)
 
 

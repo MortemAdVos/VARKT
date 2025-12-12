@@ -16,7 +16,7 @@ def dunaOrbit(ap, conn, control, rocket):
     ts_fuel = conn.add_stream(tst.amount, 'LiquidFuel')
     ts_sep = True
 
-    time.sleep(5)
+    time.sleep(20)
 
     
     k = 0.75
