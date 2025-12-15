@@ -26,7 +26,6 @@ def radialCorrect(ap, conn, control, rocket, met, tmd, dv):
     else:
         control.sas_mode = conn.space_center.SASMode.anti_radial
 
-    print("tmd: ", tmd)
     p= int(met())
     while met() < tmd-dT:
         if int(met())%10==0 and p != int(met()): 
@@ -39,4 +38,5 @@ def radialCorrect(ap, conn, control, rocket, met, tmd, dv):
     control.sas = False
 
     print('finished radial correct maneur')
+
     print()
